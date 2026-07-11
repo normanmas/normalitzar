@@ -24,3 +24,8 @@ El directori `dades` inclou diversos datasets estàndard per fer les pràctiques
 - `titanic.csv`: [Titanic: Machine Learning from Disaster, Kaggle](https://www.kaggle.com/c/titanic/data).
 
 El programa també permet indicar la ruta d'un altre arxiu CSV.
+
+
+## Funcions creades  
+1. minim_tres_files(). Detectar que l'ariu seleccionat conté un mínim de 3 files per poder normalitzar.
+2. capcalera(). Detectar si l'arxiu conté una capçalera.

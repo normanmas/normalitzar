@@ -2,7 +2,12 @@
 
 # Importar llibreries
 from pathlib import Path as Ruta
-from funcions_manuals import minim_tres_files, capcalera
+from funcions_manuals import (
+    llegir_CSV,
+    capcalera,
+    minim_tres_files,
+    detectar_columnes_numeriques
+)
 
 # Consultar sistema de normalització
 print(
@@ -42,9 +47,11 @@ else:
 if not ruta_arxiu.is_file():
     raise SystemExit(f"No s'ha trobat l'arxiu: {ruta_arxiu}")
 print(f'\nArxiu seleccionat: {ruta_arxiu}')
+files = llegir_CSV(ruta_arxiu)
+
 
 # Verificar si el CSV té capçalera
-conte_capcalera = capcalera(ruta_arxiu)
+conte_capcalera = capcalera(files)
 
 if conte_capcalera:
     print("El CSV conté una capçalera.")
@@ -52,7 +59,15 @@ else:
     print("No s'ha detectat cap capçalera.")
 
 # Verificar que l'arxiu té un mínim de tres files
-if not minim_tres_files(ruta_arxiu, conte_capcalera):
+if not minim_tres_files(files, conte_capcalera):
     raise SystemExit(
         "El CSV ha de contenir almenys 3 files de dades."
     )
+
+# Identificar les columnes numèriques
+columnes_numeriques = detectar_columnes_numeriques(
+    files,
+    conte_capcalera
+)
+
+print(f'Columnes numèriques detectades: {columnes_numeriques}')

@@ -3,34 +3,20 @@
 # Importar llibreries
 import csv
 
-# Funció per verificar el número mínim de tres files de dades
-def minim_tres_files (ruta_arxiu, capçalera):
-    with open(ruta_arxiu,
-              mode='r',
-              encoding='utf-8',
-              newline=''
-              ) as arxiu:
+
+# Funció per importar el CSV
+def llegir_CSV(ruta_arxiu):
+    with open(
+        ruta_arxiu,
+        mode='r',
+        encoding='UTF-8',
+        newline=''
+    ) as arxiu:
         lector_csv = csv.reader(arxiu)
-        
-        # Es verifica que tingui capçalera
-        if capcalera:
-            next(lector_csv, None)
+        files = list(lector_csv)
+    return files
 
-        nombre_files = 0
-        # Bucle per contar les files
-        for fila in lector_csv:
-            if fila:
-                nombre_files +=1
-            # Es retorna True a l'arribar a 3 files mínim. No cal llegir tot l'arxiu
-            if nombre_files >=3:
-                return True
-    return False
-
-# Funció per verificar si el CSV a normalitzar conté capçalera de variables
-'''
-Serà una funció aproximada, comparant la primera fila amb la segona.
-Si la primera conté text i la segona conté números a les mateixes columnes, és que segurament hi ha capçalera.
-'''
+# Verificar si un valor és numèric
 def es_numero(valor):
     try:
         float(valor)
@@ -38,22 +24,20 @@ def es_numero(valor):
     except ValueError:
         return False
 
-def capcalera(ruta_arxiu):
-    with open(
-        ruta_arxiu,
-        mode='r',
-        encoding='utf-8',
-        newline=''
-    ) as arxiu:
-        lector_csv = csv.reader(arxiu)
 
-        primera_fila = next(lector_csv, None)
-        segona_fila = next(lector_csv, None)
-    
-    if primera_fila is None or segona_fila is None:
+# Funció per verificar si el CSV a normalitzar conté capçalera de variables
+'''
+Serà una funció aproximada, comparant la primera fila amb la segona.
+Si la primera conté text i la segona conté números a les mateixes columnes, és que segurament hi ha capçalera.
+'''
+def capcalera(files):
+    if len(files) < 2:
         return False
-    
+
+    primera_fila = files[0]
+    segona_fila = files[1]
     coincidencies = 0
+
     for primer_valor, segon_valor in zip(primera_fila, segona_fila):
         primer_es_text = not es_numero(primer_valor)
         segon_es_numero = es_numero(segon_valor)
@@ -62,3 +46,48 @@ def capcalera(ruta_arxiu):
             coincidencies += 1
     
     return coincidencies > 0
+
+
+# Funció per verificar el número mínim de tres files de dades
+def minim_tres_files (files, conte_capcalera):
+    nombre_files = len(files)
+        
+    # Es verifica que tingui capçalera
+    if conte_capcalera:
+        nombre_files -= 1
+
+    return nombre_files >= 3
+
+
+# Funció per detectar les columnes númeriques.
+def detectar_columnes_numeriques(files, conte_capcalera):
+
+    if not files:   # Verificar que hi han files
+        return[]
+    
+    if conte_capcalera:     # Assignat els noms de capçalera de la primera fila
+        noms_columnes = files[0]
+        files_dades = files[1:]
+    else:
+        files_dades = files
+        noms_columnes = []
+
+        # Com no hi han noms de columnes, se n'assignen de nous
+        for posicio in range(len(files[0])):
+            noms_columnes.append(f"columna_{posicio + 1}")
+
+    columnes_numeriques = []
+
+    for posicio_columna in range(len(noms_columnes)):
+        columna_es_numerica = True
+
+        for fila in files_dades:
+            valor = fila[posicio_columna]
+
+            if not es_numero(valor):
+                columna_es_numerica = False
+
+        if columna_es_numerica:
+            columnes_numeriques.append(noms_columnes[posicio_columna])
+
+    return columnes_numeriques
