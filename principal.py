@@ -10,7 +10,9 @@ from funcions_manuals import (
     detectar_columnes_numeriques,
     analitzar_valors_buits_columnes_numeriques,
     detectar_patro_buits,
-    detectar_columnes_normalitzades
+    detectar_columnes_normalitzades,
+    preparar_columnes_per_normalitzar,
+    detectar_outliers
 )
 # Neteja de pantalla (linux)
 subprocess.run(["clear"])   # Es passa la comanda com una llista
@@ -148,3 +150,27 @@ else:
             "- màxim:",
             columna["valor_maxim"]
         )
+
+
+# Bloc sobre la detecció de outliers
+resum_outliers = detectar_outliers(
+    files,
+    conte_capcalera,
+    columnes_numeriques
+)
+
+print("\nAnàlisi d'outliers:")
+
+for resum in resum_outliers:
+    print(
+        resum["columna"],
+        "- outliers:",
+        resum["total_outliers"],
+        "- percentatge:",
+        round(resum["percentatge_outliers"], 2),
+        "%",
+        "- límit inferior:",
+        round(resum["limit_inferior"], 2),
+        "- límit superior:",
+        round(resum["limit_superior"], 2)
+    )

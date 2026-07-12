@@ -280,3 +280,140 @@ def detectar_columnes_normalitzades(
             columnes_normalitzades.append(resum_columna)
 
     return columnes_normalitzades
+
+
+# Funcions per detectar els valors outliers
+# Càlcul dels quartils
+def calcular_quartil(valors, percentatge):
+
+    if not valors:
+        return None
+    
+    valors_ordenats = sorted(valors)
+    posicio = (len(valors_ordenats) -1) * percentatge
+    posicio_inferior = int(posicio)
+    posicio_superior = posicio_inferior + 1
+
+    if posicio_superior >= len(valors_ordenats):
+        return valors_ordenats[posicio_inferior]
+    
+    distancia = posicio - posicio_inferior
+
+    valor = (
+        valors_ordenats[posicio_inferior]
+        + distancia
+        * (valors_ordenats[posicio_superior] - valors_ordenats[posicio_inferior])
+    )
+
+    return(valor)
+
+# Funció per la detecció dels ouliers
+def detectar_outliers(
+        files,
+        conte_capcalera,
+        columnes_numeriques
+    ):
+
+    if conte_capcalera:
+        noms_columnes = files[0]
+        files_dades = files[1:]
+    else:
+        files_dades = files
+        noms_columnes = []
+
+        for posicio in range(len(files[0])):
+            noms_columnes.append(f"columna_{posicio + 1}")
+    
+    resum_outliers = []
+
+    for nom_columna in columnes_numeriques:
+        posicio_columna = noms_columnes.index(nom_columna)
+        valors = []
+
+        for fila in files_dades:
+            valor = fila[posicio_columna]
+
+            if es_numero(valor):
+                valors.append(float(valor))
+        
+        if len(valors) < 4:
+            continue
+        
+        """
+        Un outlier és el nombre que té el seu valor fora dels límits.
+        El límit inferior és estar per sota del primer quartil - 1.5 cops el rang interquartílic.
+        El límit superior és estar per sobre del tercer quartil + 1.5 cops  el rang interquartílic.
+        """
+
+        primer_quartil = calcular_quartil(valors, 0.25)
+        tercer_quartil = calcular_quartil(valors, 0.75)
+
+        rang_interquartilic = tercer_quartil - primer_quartil
+        
+        limit_inferior = primer_quartil - 1.5 * rang_interquartilic
+        limit_superior = tercer_quartil + 1.5 * rang_interquartilic
+
+        total_outliers = 0
+
+        for valor in valors:
+            # Verificació de que el valor està fora de qualsevol dels dos límits i per tant és un outlier
+            if valor < limit_inferior or valor > limit_superior:
+                total_outliers += 1
+
+        percentatge_outliers = total_outliers / len(valors) * 100
+
+        resum_columna = {
+            "columna": nom_columna,
+            "primer_quartil": primer_quartil,
+            "tercer_quartil": tercer_quartil,
+            "rang_interquartilic": rang_interquartilic,
+            "limit_inferior": limit_inferior,
+            "limit_superior": limit_superior,
+            "total_outliers": total_outliers,
+            "percentatge_outliers": percentatge_outliers
+        }
+
+        resum_outliers.append(resum_columna)
+
+    return resum_outliers
+
+
+# Funció per esbrinar si una columna es pot normalitzar, està normalitzada, té massa buits o cal consultar abans.
+def preparar_columnes_per_normalitzar(
+    columnes_numeriques,
+    resum_buits,
+    columnes_normalitzades
+):
+
+    noms_columnes_normalitzades = []
+
+    for columna in columnes_normalitzades:
+        noms_columnes_normalitzades.append(columna["columna"])
+
+    columnes_preparades = []
+
+    for nom_columna in columnes_numeriques:
+        decisio = "normalitzar"
+
+        if nom_columna in noms_columnes_normalitzades:
+            decisio = "ja_normalitzada"
+
+        for resum in resum_buits:
+            if resum["columna"] == nom_columna:
+                if resum["recomanacio"] == "no_val_la_pena_normalitzar":
+                    decisio = "descartar_per_buits"
+                elif resum["recomanacio"] == "descartar_columna":
+                    decisio = "descartar_per_buits"
+                elif resum["recomanacio"] == "preguntar_si_imputar":
+                    decisio = "preguntar_si_imputar"
+                elif resum["recomanacio"] == "consultar_si_emplenar":
+                    decisio = "consultar_si_emplenar"
+
+        resum_columna = {
+            "columna": nom_columna,
+            "decisio": decisio
+        }
+
+        columnes_preparades.append(resum_columna)
+
+    return columnes_preparades
