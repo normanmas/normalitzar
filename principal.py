@@ -2,17 +2,23 @@
 
 # Importar llibreries
 from pathlib import Path as Ruta
+import subprocess
 from funcions_manuals import (
     llegir_CSV,
     capcalera,
     minim_tres_files,
-    detectar_columnes_numeriques
+    detectar_columnes_numeriques,
+    analitzar_valors_buits_columnes_numeriques,
+    detectar_patro_buits,
+    detectar_columnes_normalitzades
 )
+# Neteja de pantalla (linux)
+subprocess.run(["clear"])   # Es passa la comanda com una llista
 
 # Consultar sistema de normalització
 print(
-    "Aquesta aplicació normalitza arxius de dades per ",
-    "poder emprar-los en altres aplicacions.")
+    "Aquesta aplicació normalitza arxius de dades per",
+    "poder emprar-los en altres aplicacions, xarxes neuronals.")
 
 directori_projecte = Ruta(__file__).resolve().parent    # Esbrinar directori actual
 directori_dades = directori_projecte / "dades"
@@ -37,7 +43,7 @@ if seleccio =='':
 
 elif seleccio.isdigit():    # Han triat un número i es verifica que sigui vàlid
     numero = int(seleccio)
-    if 1 <= numero <= len(arxius):
+    if 1 <= numero <= len(arxius):  # El número està dintre del rang vàlid
         ruta_arxiu = arxius[numero-1]
     else:
         raise SystemExit("El número seleccionat no és vàlid.")
@@ -71,3 +77,74 @@ columnes_numeriques = detectar_columnes_numeriques(
 )
 
 print(f'Columnes numèriques detectades: {columnes_numeriques}')
+
+# Analitzar els valors buits en les columnes numèriques
+resum_buits = analitzar_valors_buits_columnes_numeriques(
+    files,
+    conte_capcalera,
+    columnes_numeriques
+)
+
+print("\nAnàlisi de valors buits en columnes numèriques:")
+
+for resum in resum_buits:
+    print(
+        resum["columna"],
+        "- buits:",
+        resum["total_buits"],
+        "- percentatge:",
+        round(resum["percentatge_buits"], 2),
+        "%",
+        "- recomanació:",
+        resum["recomanacio"]
+    )
+
+patro_buits = detectar_patro_buits(
+    files,
+    conte_capcalera,
+    columnes_numeriques
+)
+
+print("\nPatró dels valors buits:")
+
+if not patro_buits:
+    print("No s'han detectat valors buits.")
+else:
+    for patro in patro_buits:
+        print(
+            patro["columna"],
+            "- total buits:",
+            patro["total_buits"],
+            "- patró:",
+            patro["tipus_patro"],
+            "- primera fila:",
+            patro["primera_fila_buida"],
+            "- última fila:",
+            patro["ultima_fila_buida"],
+            "- amplada:",
+            round(patro["percentatge_amplada"], 2),
+            "%"
+        )
+
+# Bloc sobre columnes ja normalitzades
+columnes_normalitzades = detectar_columnes_normalitzades(
+    files,
+    conte_capcalera,
+    columnes_numeriques
+)
+
+print("\nColumnes que ja semblen normalitzades:")
+
+if not columnes_normalitzades:
+    print("No s'han detectat columnes normalitzades.")
+else:
+    for columna in columnes_normalitzades:
+        print(
+            columna["columna"],
+            "- tipus:",
+            columna["tipus"],
+            "- mínim:",
+            columna["valor_minim"],
+            "- màxim:",
+            columna["valor_maxim"]
+        )
