@@ -1,4 +1,4 @@
-# En aquest arxiu es crearan les funcions manuals de normalització
+# En aquest arxiu es crearan les funcions manuals de detecció i normalització
 
 # Importar llibreries
 import csv
@@ -114,7 +114,7 @@ def es_valor_buit(valor):
 def analitzar_valors_buits_columnes_numeriques(
     files,
     conte_capcalera,
-    columnes_numeriques
+    columnes_per_analitzar
 ):
 
     if conte_capcalera:
@@ -129,7 +129,7 @@ def analitzar_valors_buits_columnes_numeriques(
 
     resum_buits = []
 
-    for nom_columna in columnes_numeriques:
+    for nom_columna in columnes_per_analitzar:
         posicio_columna = noms_columnes.index(nom_columna)
 
         total_files = len(files_dades)
@@ -169,11 +169,11 @@ def analitzar_valors_buits_columnes_numeriques(
     return resum_buits
 
 
-# Funció per detectar patron en les columnes numèriques amb buits.
+# Funció per detectar patrons en les columnes numèriques amb buits.
 def detectar_patro_buits(
         files,
         conte_capçalera,
-        columnes_numeriques
+        columnes_per_analitzar
 ):
     # Verificar si conté capçalera
     if conte_capçalera:
@@ -188,7 +188,7 @@ def detectar_patro_buits(
 
     patro_buits = []
 
-    for nom_columna in columnes_numeriques:
+    for nom_columna in columnes_per_analitzar:
         posicio_columna = noms_columnes.index(nom_columna)
         files_buides = []
 
@@ -238,7 +238,7 @@ Estaria basat en la detecció de valors de la columna binaris al 100%
 def detectar_columnes_normalitzades(
         files,
         conte_capcalera,
-        columnes_numeriques
+        columnes_per_analitzar
 ):
     # Indicar el rang per si conté capçalera
     if conte_capcalera:
@@ -253,7 +253,7 @@ def detectar_columnes_normalitzades(
 
     columnes_normalitzades = []
 
-    for nom_columna in columnes_numeriques:
+    for nom_columna in columnes_per_analitzar:
         posicio_columna = noms_columnes.index(nom_columna)
         valors = []
 
@@ -282,7 +282,7 @@ def detectar_columnes_normalitzades(
     return columnes_normalitzades
 
 
-# Funcions per detectar els valors outliers
+# Bloc de funcions per detectar els valors outliers
 # Càlcul dels quartils
 def calcular_quartil(valors, percentatge):
 
@@ -307,11 +307,12 @@ def calcular_quartil(valors, percentatge):
 
     return(valor)
 
+
 # Funció per la detecció dels ouliers
 def detectar_outliers(
         files,
         conte_capcalera,
-        columnes_numeriques
+        columnes_per_analitzar
     ):
 
     if conte_capcalera:
@@ -326,7 +327,7 @@ def detectar_outliers(
     
     resum_outliers = []
 
-    for nom_columna in columnes_numeriques:
+    for nom_columna in columnes_per_analitzar:
         posicio_columna = noms_columnes.index(nom_columna)
         valors = []
 
@@ -417,3 +418,160 @@ def preparar_columnes_per_normalitzar(
         columnes_preparades.append(resum_columna)
 
     return columnes_preparades
+
+
+# Bloc de funcions per detectar la distribució de les columnes numèriques
+# Funció per calcular la mitjana
+def calcular_mitjana(valors):
+    if not valors:
+        return None
+    return sum(valors) / len(valors)
+
+
+def calcular_mediana(valors):
+    if not valors:
+        return None
+    
+    valors_ordenats = sorted(valors)
+    total_valors = len(valors_ordenats)
+    posicio_mig = total_valors // 2 # Divisió sencera que descarta la part decimal
+
+    # Comprobació de si el nombre d'elements és senar o parell
+    if total_valors % 2 == 1:
+        return valors_ordenats[posicio_mig]
+    
+    return (
+        valors_ordenats[posicio_mig - 1]
+        + valors_ordenats[posicio_mig]
+    ) / 2
+
+
+def calcular_desviacio_tipica(valors):
+    if not valors:
+        return None
+
+    mitjana = calcular_mitjana(valors)
+    suma_diferencies = 0
+
+    for valor in valors:
+        suma_diferencies += (valor - mitjana) ** 2
+
+    variancia = suma_diferencies / len(valors)
+
+    return variancia ** 0.5
+
+
+# Funció principal de detecció de la distribució
+def analitzar_distribucio(
+    files,
+    conte_capcalera,
+    columnes_per_analitzar
+):
+
+    if conte_capcalera:
+        noms_columnes = files[0]
+        files_dades = files[1:]
+    else:
+        files_dades = files
+        noms_columnes = []
+
+        for posicio in range(len(files[0])):
+            noms_columnes.append(f"columna_{posicio + 1}")
+
+    resum_distribucio = []
+
+    for nom_columna in columnes_per_analitzar:
+        posicio_columna = noms_columnes.index(nom_columna)
+        valors = []
+
+        for fila in files_dades:
+            valor = fila[posicio_columna]
+
+            if es_numero(valor):
+                valors.append(float(valor))
+
+        if not valors:
+            continue
+
+        valor_minim = min(valors)
+        valor_maxim = max(valors)
+        mitjana = calcular_mitjana(valors)
+        mediana = calcular_mediana(valors)
+        desviacio_tipica = calcular_desviacio_tipica(valors)
+
+        diferencia = abs(mitjana - mediana)
+
+        if desviacio_tipica == 0:
+            tipus_distribucio = "constant"
+        elif diferencia <= desviacio_tipica * 0.1:
+            tipus_distribucio = "forca_simetrica"
+        elif mitjana > mediana:
+            tipus_distribucio = "esbiaixada_a_la_dreta"
+        else:
+            tipus_distribucio = "esbiaixada_a_l_esquerra"
+
+        resum_columna = {
+            "columna": nom_columna,
+            "valor_minim": valor_minim,
+            "valor_maxim": valor_maxim,
+            "mitjana": mitjana,
+            "mediana": mediana,
+            "desviacio_tipica": desviacio_tipica,
+            "tipus_distribucio": tipus_distribucio
+        }
+
+        resum_distribucio.append(resum_columna)
+
+    return resum_distribucio
+
+
+# Funció per detectar les columnes ID, numèriques o sequencials.
+# Aquest tipus de columnes no cal normalitzar
+def detectar_columnes_id(
+        files,
+        conte_capçalera,
+        columnes_numeriques
+):
+    if conte_capçalera:
+        noms_columnes = files[0]
+        files_dades = files[1:]
+    else:
+        noms_columnes= []
+        files_dades = files
+
+        for posicio in range(len(files[0])):
+            noms_columnes.append(f"columna_{posicio + 1}")
+    
+    columnes_id = []
+
+    for nom_columna in columnes_numeriques:
+        posicio_columna = noms_columnes.index(nom_columna)
+        valors = []
+        
+        for fila in files_dades:
+            valor = fila[posicio_columna]
+
+            if es_numero(valor):
+                valors.append(float(valor))
+
+        if not valors:
+            continue
+
+        # Verificar si porta "id dintre del títol"
+        nom_sembla_id = 'id' in nom_columna.lower()
+        es_autonumerica = True
+
+        # Verificar si els valors coincideixen amb la posció de l'observació
+        for posicio, valor in enumerate(valors, start=1):
+            if valor != posicio:
+                es_autonumerica = False
+
+        if nom_sembla_id or es_autonumerica:
+            resum_columna = {
+                'columna': nom_columna,
+                'nom_sembla_id': nom_sembla_id,
+                'es_autonumerica': es_autonumerica
+            }
+            columnes_id.append(resum_columna)
+
+    return columnes_id

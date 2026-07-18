@@ -32,30 +32,39 @@ El directori `dades` inclou diversos datasets estàndard per fer les pràctiques
 Es generen diferents version d'alguns datasets per poder fer proves.  
 El programa també permet indicar la ruta d'un altre arxiu CSV.
 
-## Cicle de programació (12/7/26)  
+## Cicle de programació (18/7/26)  
+L'aplicació realitzarà una sèrie de comprovacions i deteccions, per fer la proposta de normalització sols a als arxius que disponguin de columnes adients per normalitzar.  
+
+Aquest procès es realitzarà en diferents fases:  
 Fase 1 - Càrrega i validació
 1. Triar arxiu
+    Seleccionar un dels arxius proposat o triar un de nou.  
 2. Llegir CSV
+    Realitzar la lectura de l'arxiu. De moment sols CSV.
 3. Detectar capçalera
+    Detecció si l'arxiu ja disposa de capçalera. En cas negatiu se'n crea una de nova.
 4. Verificar mínim 3 files
+    Verificar que l'arxiu tingui un mínim de dades per poder treballar.
 
 Fase 2 - Inspecció de dades  
 5. Detectar columnes numèriques
-6. Detectar valors buits
-7. Detectar patró dels buits
-8. Detectar columnes ja normalitzades
+6. Detectar columnes ID / autonumèriques
+7. Detectar valors buits
+8. Detectar patró dels buits
+9. Detectar columnes ja normalitzades
 
 Fase 3 - Diagnòstic estadístic  
-9. Detectar outliers
-10. Analitzar distribució
+10. Detectar outliers
+11. Analitzar distribució
 
 Fase 4 - Decisions  
-11. Decidir imputació / descart
-12. Triar algorisme de normalització
+12. Decidir imputació / descartar
+13. Triar algorisme de normalització
 
 Fase 5 - Transformació  
-13. Normalitzar
-14. Guardar nou CSV
+14. Normalitzar
+15. Guardar nou CSV
+
 
 ## Funcions creades  
 1. minim_tres_files(). Detectar que l'ariu seleccionat conté un mínim de 3 files per poder normalitzar.

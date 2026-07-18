@@ -8,11 +8,13 @@ from funcions_manuals import (
     capcalera,
     minim_tres_files,
     detectar_columnes_numeriques,
+    detectar_columnes_id,
     analitzar_valors_buits_columnes_numeriques,
     detectar_patro_buits,
     detectar_columnes_normalitzades,
     preparar_columnes_per_normalitzar,
-    detectar_outliers
+    detectar_outliers,
+    analitzar_distribucio
 )
 # Neteja de pantalla (linux)
 subprocess.run(["clear"])   # Es passa la comanda com una llista
@@ -72,19 +74,55 @@ if not minim_tres_files(files, conte_capcalera):
         "El CSV ha de contenir almenys 3 files de dades."
     )
 
+
 # Identificar les columnes numèriques
 columnes_numeriques = detectar_columnes_numeriques(
     files,
     conte_capcalera
 )
-
 print(f'Columnes numèriques detectades: {columnes_numeriques}')
+
+
+# Detecció de columnes id o autonumèriques
+# Aquest tipus de columnes NO cal normalitzar
+columnes_id = detectar_columnes_id(
+    files,
+    conte_capcalera,
+    columnes_numeriques
+)
+print('\n Columnes que semblen identificadors:')
+
+if not columnes_id:
+    print("No s'han detectat columnes ID.")
+
+else:
+    for columna in columnes_id:
+        print(
+            columna['columna'],
+            ' - nom sembla ID:',
+            columna['nom_sembla_id'],
+            '- autonumèrica',
+            columna['es_autonumerica']
+        )
+
+# Creació de la llista de columnes numèriques excepte les ID
+noms_columnes_id = []
+for columna in columnes_id:
+    noms_columnes_id.append(columna['columna'])
+
+columnes_per_analitzar = []
+for columna in columnes_numeriques:
+    if columna not in noms_columnes_id:
+        columnes_per_analitzar.append(columna)
+print("\nColumnes que es faran servir per l'anàlisi:")
+print(columnes_per_analitzar)
+
 
 # Analitzar els valors buits en les columnes numèriques
 resum_buits = analitzar_valors_buits_columnes_numeriques(
     files,
     conte_capcalera,
-    columnes_numeriques
+    columnes_per_analitzar
 )
 
 print("\nAnàlisi de valors buits en columnes numèriques:")
@@ -104,7 +142,7 @@ for resum in resum_buits:
 patro_buits = detectar_patro_buits(
     files,
     conte_capcalera,
-    columnes_numeriques
+    columnes_per_analitzar
 )
 
 print("\nPatró dels valors buits:")
@@ -132,7 +170,7 @@ else:
 columnes_normalitzades = detectar_columnes_normalitzades(
     files,
     conte_capcalera,
-    columnes_numeriques
+    columnes_per_analitzar
 )
 
 print("\nColumnes que ja semblen normalitzades:")
@@ -156,7 +194,7 @@ else:
 resum_outliers = detectar_outliers(
     files,
     conte_capcalera,
-    columnes_numeriques
+    columnes_per_analitzar
 )
 
 print("\nAnàlisi d'outliers:")
@@ -173,4 +211,31 @@ for resum in resum_outliers:
         round(resum["limit_inferior"], 2),
         "- límit superior:",
         round(resum["limit_superior"], 2)
+    )
+
+
+# Bloc sobre la distribució
+resum_distribucio = analitzar_distribucio(
+    files,
+    conte_capcalera,
+    columnes_per_analitzar
+)
+
+print("\nAnàlisi de distribució:")
+
+for resum in resum_distribucio:
+    print(
+        resum["columna"],
+        "- mínim:",
+        round(resum["valor_minim"], 2),
+        "- màxim:",
+        round(resum["valor_maxim"], 2),
+        "- mitjana:",
+        round(resum["mitjana"], 2),
+        "- mediana:",
+        round(resum["mediana"], 2),
+        "- desviació típica:",
+        round(resum["desviacio_tipica"], 2),
+        "- distribució:",
+        resum["tipus_distribucio"]
     )
