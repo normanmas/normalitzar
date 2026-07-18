@@ -575,3 +575,78 @@ def detectar_columnes_id(
             columnes_id.append(resum_columna)
 
     return columnes_id
+
+
+# Funció per detectar les columnes categòriques, ja que aquestes no s'han
+# de normalitzar com si fossin variables continues, ja que poden estar 
+# codificades per exemple amb onehot
+def detectar_columnes_categoriques_numeriques(
+        files,
+        conte_capçalera,
+        columnes_per_analitzar
+):
+    if conte_capçalera:
+        noms_columnes = files[0]
+        files_dades = files[1:]
+    else:
+        noms_columnes = []
+        files_dades = files
+
+        for posicio in range(len(files[0])):
+            noms_columnes.append(f"columna_{posicio + 1}")
+
+    columnes_categoriques = []
+
+    for nom_columna in columnes_per_analitzar:
+        posicio_columna = noms_columnes.index(nom_columna)
+        valors =[]
+
+        for fila in files_dades:
+            valor = fila[posicio_columna]
+
+            if es_numero(valor):
+                valors.append(float(valor))
+
+        if not valors:
+            continue
+
+        valors_unics = []
+
+        for valor in valors:
+            if valor not in valors_unics:
+                valors_unics.append(valor)
+
+        total_valors = len(valors)
+        total_unics = len(valors_unics)
+        percentatge_unics = total_unics / total_valors * 100
+
+        tots_son_enters = True
+
+        for valor in valors_unics:
+            if valor != int(valor):
+                tots_son_enters = False
+                
+        es_categorica = False
+        tipus = 'no_categorica'
+
+        if total_unics == 2 and tots_son_enters:
+            es_categorica = True
+            tipus = 'binaria'
+        elif total_unics <= 10 and tots_son_enters and percentatge_unics <= 20:
+            es_categorica = True
+            tipus = 'categorica_numerica'
+
+        if es_categorica:
+            resum_columna = {
+                'columna': nom_columna,
+                'tipus': tipus,
+                'total_valors': total_valors,
+                'total_unics': total_unics,
+                'percentatge_unics': percentatge_unics,
+                'valors_unics': sorted(valors_unics)
+            }
+
+            columnes_categoriques.append(resum_columna)
+            
+    return columnes_categoriques
+        

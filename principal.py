@@ -14,12 +14,14 @@ from funcions_manuals import (
     detectar_columnes_normalitzades,
     preparar_columnes_per_normalitzar,
     detectar_outliers,
-    analitzar_distribucio
+    analitzar_distribucio,
+    detectar_columnes_categoriques_numeriques
 )
+
+# Inicialitzar l'aplicació
 # Neteja de pantalla (linux)
 subprocess.run(["clear"])   # Es passa la comanda com una llista
-
-# Consultar sistema de normalització
+# Procès de selecció de l'arxiu a normalitzar
 print(
     "Aquesta aplicació normalitza arxius de dades per",
     "poder emprar-los en altres aplicacions, xarxes neuronals.")
@@ -74,7 +76,7 @@ if not minim_tres_files(files, conte_capcalera):
         "El CSV ha de contenir almenys 3 files de dades."
     )
 
-
+# Detecció i caracterització de les columnes
 # Identificar les columnes numèriques
 columnes_numeriques = detectar_columnes_numeriques(
     files,
@@ -118,11 +120,49 @@ print("\nColumnes que es faran servir per l'anàlisi:")
 print(columnes_per_analitzar)
 
 
+# Detecció de columnes categòriques numèriques
+# Aquestes columnes no s'han de normalitzar
+columnes_categoriques = detectar_columnes_categoriques_numeriques(
+    files,
+    conte_capcalera,
+    columnes_per_analitzar
+)
+
+print('\nColumnes numèriques que semblen categòriques:')
+
+if not columnes_categoriques:
+    print("No s'han detectat columnes categòriques numèriques.")
+else:
+    for columna in columnes_categoriques:
+        print(
+            columna['columna'],
+            '- tipus',
+            columna['tipus'],
+            '- valors unics:',
+            columna['valors_unics']
+        )
+
+# Creació de la nova llista per treballar, sense les columnes categòqiues
+noms_columnes_categoriques = []
+
+for columna in columnes_categoriques:
+    noms_columnes_categoriques.append(columna['columna'])
+
+columnes_continues = []
+
+for columna in columnes_per_analitzar:
+    if columna not in noms_columnes_categoriques:
+        columnes_continues.append(columna)
+
+print('\nColumnes contínues candidates a normalització:')
+print(columnes_continues)
+
+
 # Analitzar els valors buits en les columnes numèriques
 resum_buits = analitzar_valors_buits_columnes_numeriques(
     files,
     conte_capcalera,
-    columnes_per_analitzar
+    columnes_continues
 )
 
 print("\nAnàlisi de valors buits en columnes numèriques:")
@@ -142,7 +182,7 @@ for resum in resum_buits:
 patro_buits = detectar_patro_buits(
     files,
     conte_capcalera,
-    columnes_per_analitzar
+    columnes_continues
 )
 
 print("\nPatró dels valors buits:")
@@ -170,7 +210,7 @@ else:
 columnes_normalitzades = detectar_columnes_normalitzades(
     files,
     conte_capcalera,
-    columnes_per_analitzar
+    columnes_continues
 )
 
 print("\nColumnes que ja semblen normalitzades:")
@@ -194,7 +234,7 @@ else:
 resum_outliers = detectar_outliers(
     files,
     conte_capcalera,
-    columnes_per_analitzar
+    columnes_continues
 )
 
 print("\nAnàlisi d'outliers:")
@@ -218,7 +258,7 @@ for resum in resum_outliers:
 resum_distribucio = analitzar_distribucio(
     files,
     conte_capcalera,
-    columnes_per_analitzar
+    columnes_continues
 )
 
 print("\nAnàlisi de distribució:")

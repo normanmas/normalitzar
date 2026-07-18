@@ -48,10 +48,14 @@ Fase 1 - Càrrega i validació
 
 Fase 2 - Inspecció de dades  
 5. Detectar columnes numèriques
+    Separar les columnes numèriques de les que no són per poder normalitzar.
 6. Detectar columnes ID / autonumèriques
-7. Detectar valors buits
-8. Detectar patró dels buits
-9. Detectar columnes ja normalitzades
+    Descomptar les columnes que sí són numèriques però pertanyen a columnes identificadores del registre, donat que no s'han de normalitzar.
+7. Detectar columnes categòriques numèriques
+    Desmarcar les columnes considerades categòriques per normalitzar, considerant que deuen de ser enters i amb els valors repetits (pocs valors únicas sobre el total de valors).
+8. Detectar valors buits
+9. Detectar patró dels buits
+10. Detectar columnes ja normalitzades
 
 Fase 3 - Diagnòstic estadístic  
 10. Detectar outliers
